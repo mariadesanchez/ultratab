@@ -438,7 +438,7 @@ export default function Home() {
           <button 
             title="Guardar Estudio"
             style={{ backgroundColor: '#28a745', color: 'white', padding: '0.75rem', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '45px', height: '45px' }}
-            onClick={handleSave}
+            onClick={() => handleSave()}
             disabled={isSaving}
           >
             {isSaving ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}

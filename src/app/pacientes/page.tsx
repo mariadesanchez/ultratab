@@ -31,11 +31,25 @@ export default function PacientesPage() {
       
       const { data, error } = await supabase
         .from("estudios_eco")
-        .select("id, paciente, created_at")
-        .order("created_at", { ascending: false });
+        .select("*");
+        
+      if (error) {
+        console.error("Error fetching pacientes:", error);
+      }
         
       if (!error && data) {
-        setPacientes(data);
+        // Try to sort by created_at if it exists, otherwise just reverse
+        const sortedData = [...data].sort((a, b) => {
+          if (a.created_at && b.created_at) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          return 0;
+        });
+        // If they don't have created_at, just reverse to show latest at top
+        if (data.length > 0 && !data[0].created_at) {
+          sortedData.reverse();
+        }
+        setPacientes(sortedData);
       }
       setLoading(false);
     };
@@ -113,7 +127,7 @@ export default function PacientesPage() {
                     </span>
                   </div>
                   <span style={{ fontSize: '0.8rem', color: '#6c757d', marginLeft: '1.5rem' }}>
-                    {formatDate(p.created_at)}
+                    {p.created_at ? formatDate(p.created_at) : "Sin fecha"}
                   </span>
                 </div>
                 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { ArrowLeft, Pencil, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, User, Loader2, Trash2 } from "lucide-react";
 import "../globals.css";
 
 // Initialize Supabase
@@ -56,6 +56,23 @@ export default function PacientesPage() {
 
     fetchPacientes();
   }, []);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!supabase) return;
+    
+    if (window.confirm(`¿Estás seguro que deseas eliminar el estudio de ${name || "este paciente"}? Esta acción no se puede deshacer.`)) {
+      setLoading(true);
+      const { error } = await supabase.from("estudios_eco").delete().eq("id", id);
+      
+      if (!error) {
+        setPacientes(prev => prev.filter(p => p.id !== id));
+      } else {
+        console.error("Error al eliminar:", error);
+        alert("Hubo un error al eliminar el estudio.");
+      }
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -131,26 +148,48 @@ export default function PacientesPage() {
                   </span>
                 </div>
                 
-                <button
-                  onClick={() => router.push(`/?id=${p.id}`)}
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: 'var(--primary)',
-                    color: 'white',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    flexShrink: 0
-                  }}
-                  title="Editar paciente"
-                >
-                  <Pencil size={18} />
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => router.push(`/?id=${p.id}`)}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'var(--primary)',
+                      color: 'white',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      flexShrink: 0
+                    }}
+                    title="Editar paciente"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p.id, p.paciente)}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      flexShrink: 0
+                    }}
+                    title="Eliminar paciente"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

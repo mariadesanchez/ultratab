@@ -55,6 +55,7 @@ export default function Home() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const recognitionRef = useRef<any>(null);
   const finalTranscriptRef = useRef<string>("");
+  const isRecordingRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -88,12 +89,15 @@ export default function Home() {
 
         recognitionRef.current.onerror = (event: any) => {
           console.error("Speech recognition error", event.error);
-          setIsRecording(false);
+          if (event.error !== "no-speech") {
+            isRecordingRef.current = false;
+            setIsRecording(false);
+          }
         };
 
         recognitionRef.current.onend = () => {
           // Restart if still marked as recording (prevents auto-stop on silence)
-          if (isRecording) {
+          if (isRecordingRef.current) {
             try {
               recognitionRef.current.start();
             } catch (e) {
@@ -106,10 +110,11 @@ export default function Home() {
     
     return () => {
       if (recognitionRef.current) {
+        isRecordingRef.current = false;
         recognitionRef.current.stop();
       }
     };
-  }, [isRecording]);
+  }, []);
 
   useEffect(() => {
     const lowerText = transcript.toLowerCase();
@@ -120,6 +125,7 @@ export default function Home() {
     
     if (lowerText.includes("stop") || lowerText.includes("detener dictado")) {
       if (recognitionRef.current) {
+        isRecordingRef.current = false;
         recognitionRef.current.stop();
         setIsRecording(false);
       }
@@ -128,12 +134,18 @@ export default function Home() {
 
   const toggleRecording = () => {
     if (isRecording) {
+      isRecordingRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
     } else {
       setTranscript("");
       finalTranscriptRef.current = "";
-      recognitionRef.current?.start();
+      isRecordingRef.current = true;
+      try {
+        recognitionRef.current?.start();
+      } catch (e) {
+        console.error("Could not start recognition:", e);
+      }
       setIsRecording(true);
     }
   };
@@ -309,6 +321,7 @@ export default function Home() {
     
     // Detener el micrófono si está grabando al momento de guardar
     if (recognitionRef.current) {
+      isRecordingRef.current = false;
       recognitionRef.current.stop();
       setIsRecording(false);
     }

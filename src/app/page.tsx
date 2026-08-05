@@ -395,9 +395,9 @@ function HomeContent() {
       setTranscript("");
       finalTranscriptRef.current = "";
       
-      // If we were editing a patient from the list, remove the ID from URL
+      // If we were editing a patient from the list, redirect back to the patients list
       if (searchParams.get("id")) {
-        router.replace("/");
+        router.push("/pacientes");
       }
       
       setTimeout(() => setSaveStatus("idle"), 3000);

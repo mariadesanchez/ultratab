@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, Save, Loader2, X } from "lucide-react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { Mic, MicOff, Save, Loader2, X, Users } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 // Inicializaremos supabase cuando tengamos las keys
@@ -47,7 +48,7 @@ const initialFormData: FormData = {
   conclusiones: "",
 };
 
-export default function Home() {
+function HomeContent() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -56,6 +57,34 @@ export default function Home() {
   const recognitionRef = useRef<any>(null);
   const finalTranscriptRef = useRef<string>("");
   const isRecordingRef = useRef(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id && supabase) {
+      const fetchPatient = async () => {
+        const { data, error } = await supabase.from("estudios_eco").select("*").eq("id", id).single();
+        if (data && !error) {
+          setFormData({
+            paciente: data.paciente || "",
+            dd_mm: data.dd_mm ? String(data.dd_mm) : "",
+            ds_mm: data.ds_mm ? String(data.ds_mm) : "",
+            siv_mm: data.siv_mm ? String(data.siv_mm) : "",
+            pp_mm: data.pp_mm ? String(data.pp_mm) : "",
+            ao_mm: data.ao_mm ? String(data.ao_mm) : "",
+            ai_mm: data.ai_mm ? String(data.ai_mm) : "",
+            apertura_ao: data.apertura_ao ? String(data.apertura_ao) : "",
+            fey_porcentaje: data.fey_porcentaje ? String(data.fey_porcentaje) : "",
+            vol_ai: data.vol_ai ? String(data.vol_ai) : "",
+            fd: data.fd || "",
+            conclusiones: data.conclusiones || "",
+          });
+        }
+      };
+      fetchPatient();
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -357,6 +386,11 @@ export default function Home() {
       setTranscript("");
       finalTranscriptRef.current = "";
       
+      // If we were editing a patient from the list, remove the ID from URL
+      if (searchParams.get("id")) {
+        router.replace("/");
+      }
+      
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch (error) {
       console.error("Error saving:", error);
@@ -372,27 +406,49 @@ export default function Home() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', maxWidth: '300px', margin: '0 auto 1.5rem auto' }}>
           <h1 style={{ fontSize: '1.5rem', color: 'var(--primary-dark)' }}>Resultados</h1>
           
-          <button 
-            onClick={toggleRecording}
-            className={`btn-icon-only ${isRecording ? 'recording' : ''}`}
-            title={isRecording ? 'Detener Dictado' : 'Iniciar Dictado Voz'}
-            style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: isRecording ? '#28a745' : 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              transition: 'background-color 0.3s ease'
-            }}
-          >
-            {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+              onClick={() => router.push("/pacientes")}
+              className="btn-icon-only"
+              title="Ver Pacientes"
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'white',
+                color: 'var(--primary)',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}
+            >
+              <Users size={24} />
+            </button>
+            <button 
+              onClick={toggleRecording}
+              className={`btn-icon-only ${isRecording ? 'recording' : ''}`}
+              title={isRecording ? 'Detener Dictado' : 'Iniciar Dictado Voz'}
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isRecording ? '#28a745' : 'var(--primary)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                transition: 'background-color 0.3s ease'
+              }}
+            >
+              {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
+            </button>
+          </div>
         </div>
 
         {isRecording && (
@@ -489,5 +545,13 @@ export default function Home() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Cargando...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

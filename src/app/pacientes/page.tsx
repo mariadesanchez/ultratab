@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { ArrowLeft, CheckCircle2, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, User, Loader2 } from "lucide-react";
 import "../globals.css";
 
 // Initialize Supabase
@@ -147,9 +147,9 @@ export default function PacientesPage() {
                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                     flexShrink: 0
                   }}
-                  title="Cargar paciente"
+                  title="Editar paciente"
                 >
-                  <CheckCircle2 size={20} />
+                  <Pencil size={18} />
                 </button>
               </div>
             ))}

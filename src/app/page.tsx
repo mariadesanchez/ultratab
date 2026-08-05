@@ -362,22 +362,31 @@ function HomeContent() {
     }
 
     try {
-      const { error } = await supabase.from("estudios_eco").insert([
-        {
-          paciente: currentData.paciente,
-          dd_mm: Number(currentData.dd_mm) || null,
-          ds_mm: Number(currentData.ds_mm) || null,
-          siv_mm: Number(currentData.siv_mm) || null,
-          pp_mm: Number(currentData.pp_mm) || null,
-          ao_mm: Number(currentData.ao_mm) || null,
-          ai_mm: Number(currentData.ai_mm) || null,
-          apertura_ao: Number(currentData.apertura_ao) || null,
-          fey_porcentaje: Number(currentData.fey_porcentaje) || null,
-          vol_ai: Number(currentData.vol_ai) || null,
-          fd: currentData.fd,
-          conclusiones: currentData.conclusiones
-        }
-      ]);
+      const payload = {
+        paciente: currentData.paciente,
+        dd_mm: Number(currentData.dd_mm) || null,
+        ds_mm: Number(currentData.ds_mm) || null,
+        siv_mm: Number(currentData.siv_mm) || null,
+        pp_mm: Number(currentData.pp_mm) || null,
+        ao_mm: Number(currentData.ao_mm) || null,
+        ai_mm: Number(currentData.ai_mm) || null,
+        apertura_ao: Number(currentData.apertura_ao) || null,
+        fey_porcentaje: Number(currentData.fey_porcentaje) || null,
+        vol_ai: Number(currentData.vol_ai) || null,
+        fd: currentData.fd,
+        conclusiones: currentData.conclusiones
+      };
+
+      const idToEdit = searchParams.get("id");
+      let error;
+
+      if (idToEdit) {
+        const { error: updateError } = await supabase.from("estudios_eco").update(payload).eq("id", idToEdit);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase.from("estudios_eco").insert([payload]);
+        error = insertError;
+      }
 
       if (error) throw error;
       

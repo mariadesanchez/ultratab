@@ -170,6 +170,14 @@ export default function Home() {
         // Expresión regular que captura números enteros y decimales (con coma o punto)
         const numbers = cleanedText.match(/\d+(?:[.,]\d+)?/g);
         if (numbers && numbers.length > 0) {
+          // Extraer paciente: todo el texto antes del primer número
+          const firstNumMatch = text.match(/\d+(?:[.,]\d+)?/);
+          if (firstNumMatch && firstNumMatch.index !== undefined && firstNumMatch.index > 0) {
+            const beforeNumber = text.substring(0, firstNumMatch.index).replace(/paciente/gi, "").trim();
+            if (beforeNumber) {
+              newData.paciente = beforeNumber;
+            }
+          }
           if (numbers[0]) newData.dd_mm = numbers[0];
           if (numbers[1]) newData.ds_mm = numbers[1];
           if (numbers[2]) newData.siv_mm = numbers[2];
@@ -207,7 +215,18 @@ export default function Home() {
 
       // Extracción de Paciente
       const pacienteMatch = extractValue("paciente");
-      if (pacienteMatch) newData.paciente = pacienteMatch;
+      if (pacienteMatch) {
+        newData.paciente = pacienteMatch;
+      } else {
+        // Si no dijo "paciente", asumir que todo lo que está antes de la primera palabra clave es el paciente
+        const firstKeywordMatch = text.match(/\b(dd|ds|siv|pp|ao|ai|apertura|fey|vol|volumen|fd|conclusi(?:ones|ón))\b/i);
+        if (firstKeywordMatch && firstKeywordMatch.index !== undefined && firstKeywordMatch.index > 0) {
+           const beforeKeyword = text.substring(0, firstKeywordMatch.index).trim();
+           if (beforeKeyword) {
+             newData.paciente = beforeKeyword;
+           }
+        }
+      }
 
       // Extracción de Conclusiones (suele ser al final)
       const concMatch = text.match(/conclusi(?:ones|ón)\s+(.*)/i);
